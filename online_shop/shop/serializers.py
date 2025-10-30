@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Product, CustomUser, Cart, CartItem, Order, OrderItem
 from django.contrib.auth.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
