@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any
 
 from django.db import models
 from django.utils import timezone
@@ -67,16 +68,20 @@ class Product(models.Model):
 #CustomUser Model
 class CustomUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    first_name = models.CharField(max_length=150, blank=True, verbose_name="First Name")
-    last_name = models.CharField(max_length=150, blank=True, verbose_name="Last Name")
-    phone = models.CharField(max_length=30, blank=True, verbose_name="Phone")
-    birth_date = models.DateField(null=True, blank=True, verbose_name="Birth Date")
-    city = models.CharField(max_length=150, blank=True, verbose_name="City")
-    address = models.TextField(blank=True, null=True, verbose_name="Address")
+    first_name = models.CharField(max_length=150, blank=True, verbose_name="first Name")
+    last_name = models.CharField(max_length=150, blank=True, verbose_name="last Name")
+    phone = models.CharField(max_length=30, blank=True, verbose_name="phone")
+    birth_date = models.DateField(null=True, blank=True, verbose_name="birth Date")
+    city = models.CharField(max_length=150, blank=True, verbose_name="vity")
+    address = models.TextField(blank=True, null=True, verbose_name="address")
 
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self.email = None
 
     def __str__(self):
         return self.get_full_name() or self.user.username
@@ -87,8 +92,8 @@ class CustomUser(models.Model):
 
 #Cart Model
 class Cart(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, verbose_name="User")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated at")
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, verbose_name="user")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="updated at")
 
     class Meta:
         verbose_name = "Cart"
@@ -113,8 +118,8 @@ class Cart(models.Model):
 #CartItem Model
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Product")
-    quantity = models.PositiveIntegerField(default=1, verbose_name="Quantity")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="product")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="quantity")
 
     class Meta:
         verbose_name = "CartItem"
@@ -129,15 +134,15 @@ class CartItem(models.Model):
 
 # Orders
 class Order(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="Items")
-    order_number = models.CharField(max_length=100, unique=True, verbose_name="Order number")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="items")
+    order_number = models.CharField(max_length=100, unique=True, verbose_name="order number")
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Total Amount")
-    shipping_address = models.TextField(verbose_name="Shipping Address")
-    phone = models.CharField(max_length=30, verbose_name="Phone")
-    notes = models.TextField(blank=True, null=True, verbose_name="Notes")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created at")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated at")
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="total amount")
+    shipping_address = models.TextField(verbose_name="shipping address")
+    phone = models.CharField(max_length=30, verbose_name="phone")
+    notes = models.TextField(blank=True, null=True, verbose_name="notes")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="created at")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="updated at")
 
     class Meta:
         verbose_name = "Order"
@@ -157,10 +162,10 @@ class Order(models.Model):
         self.save()
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="Items")
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name="Product")
-    quantity = models.PositiveIntegerField(default=1, verbose_name="Quantity")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Price", default=0)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name="product")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="quantity")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="price", default=0)
 
     class Meta:
         verbose_name = "OrderItem"
@@ -171,3 +176,8 @@ class OrderItem(models.Model):
 
     def get_total_price(self):
         return self.price * self.quantity
+
+    def save(self, *args, **kwargs):
+        if not self.price or self.price == 0:
+            self.price = self.product.price
+        super().save(*args, **kwargs)
