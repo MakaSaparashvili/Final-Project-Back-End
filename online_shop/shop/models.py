@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 from django.contrib.auth.models import User
 
@@ -71,6 +72,7 @@ class CustomUser(models.Model):
     phone = models.CharField(max_length=30, blank=True, verbose_name="Phone")
     birth_date = models.DateField(null=True, blank=True, verbose_name="Birth Date")
     city = models.CharField(max_length=150, blank=True, verbose_name="City")
+    address = models.TextField(blank=True, null=True, verbose_name="Address")
 
     class Meta:
         verbose_name = "User"
@@ -110,7 +112,7 @@ class Cart(models.Model):
 
 #CartItem Model
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="cart")
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Product")
     quantity = models.PositiveIntegerField(default=1, verbose_name="Quantity")
 
@@ -127,7 +129,7 @@ class CartItem(models.Model):
 
 # Orders
 class Order(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="User")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="Items")
     order_number = models.CharField(max_length=100, unique=True, verbose_name="Order number")
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Total Amount")
@@ -144,16 +146,21 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.order_number} ({self.user})"
 
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{self.id or 'TEMP'}"
+        super().save(*args, **kwargs)
+
     def recalc_total(self):
         total = sum([oi.get_total_price() for oi in self.items.all()])
         self.total_amount = total
         self.save()
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="Items")
     product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name="Product")
     quantity = models.PositiveIntegerField(default=1, verbose_name="Quantity")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Price")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Price", default=0)
 
     class Meta:
         verbose_name = "OrderItem"
