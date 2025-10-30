@@ -1,12 +1,13 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, generics, status, serializers
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, generics, status, serializers, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Category, Product, CartItem, Order, OrderItem
+from .models import Category, Product, CartItem, Order, OrderItem, CustomUser, Cart
 from .serializers import CategorySerializer, ProductSerializer, RegisterSerializer, ProfileSerializer, CartSerializer, \
     OrderSerializer
 
@@ -21,18 +22,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        category = self.request.query_params.get("category")
-        color = self.request.query_params.get("color")
-        material = self.request.query_params.get("material")
-        if category:
-            qs = qs.filter(category__id=category)
-        if color:
-            qs = qs.filter(color=color)
-        if material:
-            qs = qs.filter(material=material)
-        return qs
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['category', 'color', 'material']
+    ordering_fields = ['price', 'created_at', 'name']
+    ordering = ['name']
 
 # Auth endpoints
 class RegisterView(generics.CreateAPIView):
@@ -72,28 +65,40 @@ class CartView(generics.RetrieveAPIView):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_to_cart(request):
-    profile = request.user.profile
-    cart = profile.cart
+    profile, _ = CustomUser.objects.get_or_create(user=request.user)
+    cart, _ = Cart.objects.get_or_create(user=profile)
+
     product_id = request.data.get("product_id")
     quantity = int(request.data.get("quantity", 1))
     product = get_object_or_404(Product, id=product_id)
+
     item, created = CartItem.objects.get_or_create(cart=cart, product=product)
     if not created:
         item.quantity += quantity
     else:
         item.quantity = quantity
     item.save()
-    return Response({"detail": "Added"}, status=status.HTTP_200_OK)
+
+    return Response({"detail": "Added"}, status=200)
+
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def remove_from_cart(request):
     profile = request.user.profile
     cart = profile.cart
-    item_id = request.data.get("item_id")
-    item = get_object_or_404(CartItem, id=item_id, cart=cart)
-    item.delete()
-    return Response({"detail": "Removed"}, status=status.HTTP_200_OK)
+    product_id = request.data.get("product_id")
+    if not product_id:
+        return Response({"error": "Product ID is required"}, status=400)
+
+    try:
+        item = CartItem.objects.get(cart=cart, product_id=product_id)
+        item.delete()
+        return Response({"detail": "Removed"}, status=200)
+    except CartItem.DoesNotExist:
+        return Response({"detail": "Product not in cart"}, status=200)  # არ აგდებს 404
+
 
 # Orders
 class OrderViewSet(viewsets.ModelViewSet):
