@@ -72,7 +72,7 @@ class CustomUser(models.Model):
     last_name = models.CharField(max_length=150, blank=True, verbose_name="last Name")
     phone = models.CharField(max_length=30, blank=True, verbose_name="phone")
     birth_date = models.DateField(null=True, blank=True, verbose_name="birth Date")
-    city = models.CharField(max_length=150, blank=True, verbose_name="vity")
+    city = models.CharField(max_length=150, blank=True, verbose_name="city")
     address = models.TextField(blank=True, null=True, verbose_name="address")
 
     class Meta:

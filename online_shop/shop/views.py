@@ -3,7 +3,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics, status, serializers, filters
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -31,6 +31,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -108,8 +109,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user.profile)
 
+    @action(detail=False, methods=["post"], url_path="create")
     @transaction.atomic
-    def create(self, request, *args, **kwargs):
+    def create_order(self, request, *args, **kwargs):
         profile = request.user.profile
         cart = profile.cart
         if cart.items.count() == 0:
