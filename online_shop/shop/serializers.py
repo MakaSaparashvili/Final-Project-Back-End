@@ -1,6 +1,10 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Category, Product, CustomUser, Cart, CartItem, Order, OrderItem
 from django.contrib.auth.models import User
+
+
+User: type[User] = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -69,3 +73,30 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = "__all__"
         read_only_fields = ("order_number", "total_amount", "created_at", "updated_at")
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    @staticmethod
+    def validate_email(value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+#passwordresetserializers
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    @staticmethod
+    def validate_email(value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(min_length=8)
+
+    @staticmethod
+    def validate_new_password(value):
+        return value
