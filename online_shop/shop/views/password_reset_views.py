@@ -31,7 +31,6 @@ class PasswordResetRequestAPIView(APIView):
             recipient_list=[email],
             fail_silently=False,
         )
-
         return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
 
 

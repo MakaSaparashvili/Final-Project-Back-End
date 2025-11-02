@@ -1,11 +1,9 @@
 from decimal import Decimal
 from typing import Any
-
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from django.contrib.auth.models import User
-
 from shop.choices import COLOR_CHOICES, MATERIAL_CHOICES, STATUS_CHOICES
 
 
@@ -31,6 +29,7 @@ class Category(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
+
 #Product Model
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name")
@@ -47,7 +46,6 @@ class Product(models.Model):
     image_2 = models.ImageField(upload_to="products/", blank=True, null=True)
     image_3 = models.ImageField(upload_to="products/", blank=True, null=True)
     image_4 = models.ImageField(upload_to="products/", blank=True, null=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -81,7 +79,6 @@ class CustomUser(models.Model):
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        self.email = None
 
     def __str__(self):
         return self.get_full_name() or self.user.username
@@ -160,6 +157,7 @@ class Order(models.Model):
         total = sum([oi.get_total_price() for oi in self.items.all()])
         self.total_amount = total
         self.save()
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")

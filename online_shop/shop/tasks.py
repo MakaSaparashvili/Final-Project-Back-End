@@ -9,14 +9,17 @@ def send_order_confirmation_email(order_id):
     try:
         order = Order.objects.get(id=order_id)
     except Order.DoesNotExist:
-        return
+        return None
+
+    recipient = getattr(order.user.user, 'email', None)
+
     subject = f"Order Confirmation - {order.order_number}"
     message = (f"Thank you for your order {order.user.get_full_name()}. "
                f"Order number: {order.order_number}. "
                f"Total: {order.total_amount}")
-    recipient = order.user.email
+
     if recipient:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient], fail_silently=True)
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient], fail_silently=False)
     return True
 
 

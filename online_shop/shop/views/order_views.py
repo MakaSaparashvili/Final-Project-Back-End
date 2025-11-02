@@ -3,7 +3,6 @@ from rest_framework import viewsets, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from shop.models import Order, OrderItem
 from shop.serializers import OrderSerializer
 
@@ -52,7 +51,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.total_amount = total
         order.save()
         cart.items.all().delete()
-
 
         from ..tasks import send_order_confirmation_email
         send_order_confirmation_email.delay(order.id)

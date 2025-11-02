@@ -5,6 +5,7 @@ from .models import CustomUser, Cart
 
 User = get_user_model()
 
+
 @receiver(post_save, sender=User)
 def create_profile_and_cart(sender, instance, created, **kwargs):
     if created:

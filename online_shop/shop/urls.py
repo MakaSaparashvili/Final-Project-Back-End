@@ -7,6 +7,7 @@ from .views.category_views import CategoryViewSet
 from .views.order_views import OrderViewSet
 from .views.product_views import ProductViewSet
 
+
 router = DefaultRouter()
 router.register(r"categories", CategoryViewSet, basename="categories")
 router.register(r"products", ProductViewSet, basename="products")

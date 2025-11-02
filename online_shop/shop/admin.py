@@ -31,16 +31,19 @@ class CartItemInline(admin.TabularInline):
     model = CartItem
     extra = 0
 
+
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
     list_display = ("user", "updated_at")
     list_filter = ("user",)
     inlines = [CartItemInline]
 
+
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = ("price",)
+
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):

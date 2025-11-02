@@ -11,6 +11,7 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -25,6 +26,7 @@ def login_view(request):
             "access": str(refresh.access_token),
         })
     return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
