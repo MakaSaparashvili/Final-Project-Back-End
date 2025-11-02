@@ -134,7 +134,7 @@ The Django Admin panel is fully customized and includes:
 ## Author
 Maka Saparashvili
 
-## Project Menthor
+## Project Mentor
 Mariam Kipshidze
 
 ## License
